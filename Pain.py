@@ -617,7 +617,7 @@ def get_greedy_points(
 # --- Sublime Text command classes ---
 
 
-class WindowCommandSettings(sublime_plugin.WindowCommand):
+class WindowCommandSettings:
     """Base class providing settings access for commands."""
 
     RESIZE_MODE = "resize_mode"
@@ -690,7 +690,7 @@ class WindowCommandSettings(sublime_plugin.WindowCommand):
         return sublime.load_settings(WindowCommandSettings.SETTINGS_FILE)
 
 
-class PainResizeCommand(WindowCommandSettings):
+class PainResizeCommand(sublime_plugin.WindowCommand, WindowCommandSettings):
     """Resize editor panes via keyboard shortcuts."""
 
     _last_invalid_mode: str | None = None
@@ -898,7 +898,9 @@ class PainResizeCommand(WindowCommandSettings):
             window.focus_view(swap["active_view"])
 
 
-class PainToggleSettingCommand(WindowCommandSettings):
+class PainToggleSettingCommand(
+    sublime_plugin.WindowCommand, WindowCommandSettings
+):
     """Toggle a Pain setting via the command palette.
 
     Cycles ``resize_mode`` between ``"directional"`` and

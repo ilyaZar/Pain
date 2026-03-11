@@ -1,5 +1,6 @@
 # Exclude non-functional files from .sublime-package
 assets/            export-ignore
+.sublime/          export-ignore
 tests/             export-ignore
 .github/           export-ignore
 .gitignore         export-ignore
