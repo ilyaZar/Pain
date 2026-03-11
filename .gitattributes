@@ -8,5 +8,4 @@ tests/             export-ignore
 pyproject.toml     export-ignore
 coverage.xml       export-ignore
 .coverage          export-ignore
-.python-version    export-ignore
 uv.lock            export-ignore
