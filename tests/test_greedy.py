@@ -27,6 +27,7 @@ def _make_resize_cmd(
     mode: str,
     greedy: bool,
     amount: int = 10,
+    minimum: int = 0,
 ) -> PainResizeCommand:
     cmd = PainResizeCommand.__new__(PainResizeCommand)
     cmd.window = MagicMock()
@@ -40,6 +41,7 @@ def _make_resize_cmd(
             WindowCommandSettings.RESIZE_MODE: mode,
             WindowCommandSettings.GREEDY_PANE: greedy,
             WindowCommandSettings.RESIZE_AMOUNT: amount,
+            WindowCommandSettings.MINIMUM_PANE_SIZE: minimum,
         }
     )
     cmd.settings = MagicMock(return_value=settings)  # type: ignore[method-assign]
@@ -122,3 +124,78 @@ class TestGreedyResize:
         cmd.resize("width", 10)
 
         assert _applied_cols(cmd) == [0.0, 0.29, 0.30, 0.90, 1.0]
+
+
+class TestMinimumPaneSize:
+    def test_non_greedy_clamps_left_pane_at_minimum(self) -> None:
+        cmd = _make_resize_cmd(
+            {
+                "active_group": 0,
+                "cols": [0.0, 0.12, 1.0],
+                "rows": [0.0, 1.0],
+                "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
+            },
+            mode="directional",
+            greedy=False,
+            minimum=10,
+        )
+
+        cmd.resize("width", -3)
+
+        assert _applied_cols(cmd) == [0.0, 0.10, 1.0]
+
+    def test_growth_mode_clamps_right_pane_at_minimum(self) -> None:
+        cmd = _make_resize_cmd(
+            {
+                "active_group": 1,
+                "cols": [0.0, 0.88, 1.0],
+                "rows": [0.0, 1.0],
+                "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
+            },
+            mode="growth",
+            greedy=False,
+            minimum=10,
+        )
+
+        cmd.resize("width", -3)
+
+        assert _applied_cols(cmd) == [0.0, 0.90, 1.0]
+
+    def test_greedy_pushes_neighbor_to_preserve_minimum(self) -> None:
+        cmd = _make_resize_cmd(
+            {
+                "active_group": 0,
+                "cols": [0.0, 0.25, 0.40, 0.70, 1.0],
+                "rows": [0.0, 1.0],
+                "cells": [
+                    [0, 0, 1, 1],
+                    [1, 0, 2, 1],
+                    [2, 0, 3, 1],
+                    [3, 0, 4, 1],
+                ],
+            },
+            mode="directional",
+            greedy=True,
+            minimum=10,
+        )
+
+        cmd.resize("width", 10)
+
+        assert _applied_cols(cmd) == [0.0, 0.35, 0.45, 0.70, 1.0]
+
+    def test_greedy_clamps_at_outer_edge(self) -> None:
+        cmd = _make_resize_cmd(
+            {
+                "active_group": 1,
+                "cols": [0.0, 0.88, 1.0],
+                "rows": [0.0, 1.0],
+                "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
+            },
+            mode="directional",
+            greedy=True,
+            minimum=10,
+        )
+
+        cmd.resize("width", 5)
+
+        assert _applied_cols(cmd) == [0.0, 0.90, 1.0]

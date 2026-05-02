@@ -5,5 +5,7 @@
     // {Boolean} if true, push adjacent panes during resize
     "greedy_pane": false,
     // {Integer} the amount to resize pane in the range of 1 to 100
-    "resize_amount": 3
+    "resize_amount": 3,
+    // {Integer} minimum pane size as percentage of width/height
+    "minimum_pane_size": 10
 }

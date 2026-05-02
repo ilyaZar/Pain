@@ -98,7 +98,7 @@ By default, Pain stops a separator just before it would cross the next
 pane boundary. This preserves adjacent pane sizes and prevents one
 keypress from moving multiple separators.
 
-When `greedy_pane` is enabled, Pain uses PanePane's greedy behavior:
+When `greedy_pane` is enabled, Pain uses greedy behavior:
 if the moved separator reaches a neighboring separator, the neighbor is
 pushed by the same amount. The push can cascade through several panes.
 If the cascade would hit the outer window edge, the resize is cancelled
@@ -111,6 +111,17 @@ Enable it with:
 ```
 
 The setting works with both `resize_mode` values.
+
+### Minimum Pane Size
+
+Pain prevents resize commands from making panes smaller than
+`minimum_pane_size` percent in the resized dimension. The default is
+`10`. Set it to `0` to allow the old one-percent boundary behavior.
+
+This guard applies in both resize modes and with `greedy_pane`
+enabled. Non-greedy resizing stops at the minimum. Greedy resizing can
+push adjacent separators, but cancels the resize if the resulting
+layout cannot satisfy the minimum for every pane.
 
 ## Examples
 
@@ -299,11 +310,12 @@ commands are available from the command palette (`Ctrl+Shift+P`):
 
 Open settings via `Preferences > Package Settings > Pain > Settings`.
 
-| Setting | Type | Default | Description |
-|:--------|:-----|:--------|:------------|
-| `resize_mode` | string | `"directional"` | `"directional"` (default) or `"growth"`. See [Resize Modes](#resize-modes). |
-| `greedy_pane` | bool | `false` | Push adjacent panes instead of stopping at the next separator. |
-| `resize_amount` | int | `3` | Percentage of editor width/height to resize per keypress (1--100). |
+| Setting             | Type   | Default         | Description       |
+|:--------------------|:-------|:----------------|:------------------|
+| `resize_mode`       | string | `"directional"` | Resize model.     |
+| `greedy_pane`       | bool   | `false`         | Cascade pushes.   |
+| `resize_amount`     | int    | `3`             | Step percent.     |
+| `minimum_pane_size` | int    | `10`            | Min pane percent. |
 
 ## Package Landscape
 
