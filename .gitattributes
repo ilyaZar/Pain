@@ -2,10 +2,14 @@
 assets/            export-ignore
 .sublime/          export-ignore
 tests/             export-ignore
+tests_sublime/     export-ignore
 .github/           export-ignore
 .gitignore         export-ignore
 .gitattributes     export-ignore
 pyproject.toml     export-ignore
+unittesting.json   export-ignore
 coverage.xml       export-ignore
 .coverage          export-ignore
 uv.lock            export-ignore
+TODO/              export-ignore
+TO-DO/             export-ignore

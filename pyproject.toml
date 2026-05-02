@@ -1,6 +1,6 @@
 [project]
 name = "Pain"
-version = "0.1.0"
+version = "0.1.1"
 description = "No pain to resize panes. Sublime Text plugin for keyboard-driven pane resizing."
 requires-python = ">=3.8"
 
@@ -26,6 +26,7 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D"]  # no docstrings required in tests
+"tests_sublime/*" = ["D"]  # no docstrings required in tests
 
 [tool.pyright]
 pythonVersion = "3.8"

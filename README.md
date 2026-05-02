@@ -92,6 +92,26 @@ differ only at boundary panes (see [Examples](#examples) below).
 Distributes all separators evenly, resetting every pane in the given
 dimension to equal size.
 
+### Greedy Pane
+
+By default, Pain stops a separator just before it would cross the next
+pane boundary. This preserves adjacent pane sizes and prevents one
+keypress from moving multiple separators.
+
+When `greedy_pane` is enabled, Pain uses PanePane's greedy behavior:
+if the moved separator reaches a neighboring separator, the neighbor is
+pushed by the same amount. The push can cascade through several panes.
+If the cascade would hit the outer window edge, the resize is cancelled
+and the layout is left unchanged.
+
+Enable it with:
+
+```json
+"greedy_pane": true
+```
+
+The setting works with both `resize_mode` values.
+
 ## Examples
 
 ### Two-column layout
@@ -272,6 +292,7 @@ commands are available from the command palette (`Ctrl+Shift+P`):
 | Palette Caption | Description |
 |:----------------|:------------|
 | Pain: Toggle Resize Mode | Switch between directional and growth mode. |
+| Pain: Toggle Greedy Pane | Toggle cascade resizing for adjacent panes. |
 | Preferences: Pain Settings | Open default and user settings side by side. |
 
 ## Settings
@@ -281,6 +302,7 @@ Open settings via `Preferences > Package Settings > Pain > Settings`.
 | Setting | Type | Default | Description |
 |:--------|:-----|:--------|:------------|
 | `resize_mode` | string | `"directional"` | `"directional"` (default) or `"growth"`. See [Resize Modes](#resize-modes). |
+| `greedy_pane` | bool | `false` | Push adjacent panes instead of stopping at the next separator. |
 | `resize_amount` | int | `3` | Percentage of editor width/height to resize per keypress (1--100). |
 
 ## Package Landscape

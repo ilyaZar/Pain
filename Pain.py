@@ -794,13 +794,14 @@ class PainResizeCommand(sublime_plugin.WindowCommand, WindowCommandSettings):
             )
 
         if point_index >= 0:
+            greedy = self.get_setting(WindowCommandSettings.GREEDY_PANE)
             amount *= sign
-            if mode == "directional":
-                point_min = points[point_index - 1]
-                point_max = points[point_index + 1]
-            elif self.get_setting(WindowCommandSettings.GREEDY_PANE):
+            if greedy:
                 point_min = 0.0
                 point_max = 1.0
+            elif mode == "directional":
+                point_min = points[point_index - 1]
+                point_max = points[point_index + 1]
             else:
                 min_idx, max_idx = get_point_min_max(
                     active_cell,
@@ -819,7 +820,7 @@ class PainResizeCommand(sublime_plugin.WindowCommand, WindowCommandSettings):
                 point_max,
             )
             if is_valid_point_value(new_value, point_min, point_max):
-                if self.get_setting(WindowCommandSettings.GREEDY_PANE):
+                if greedy:
                     points = get_greedy_points(
                         point_index,
                         points,

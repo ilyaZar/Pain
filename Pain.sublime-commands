@@ -11,4 +11,10 @@
     "args": {
         "setting": "resize_mode"
     }
+}, {
+    "caption": "Pain: Toggle Greedy Pane",
+    "command": "pain_toggle_setting",
+    "args": {
+        "setting": "greedy_pane"
+    }
 }]
