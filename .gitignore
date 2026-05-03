@@ -1,6 +1,7 @@
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+.venv/
 tests_sublime/__pycache__/
 *.sublime-project
 *.sublime-workspace

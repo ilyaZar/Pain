@@ -4,6 +4,14 @@ version = "0.1.1"
 description = "No pain to resize panes. Sublime Text plugin for keyboard-driven pane resizing."
 requires-python = ">=3.8"
 
+[dependency-groups]
+dev = [
+    "pytest==8.3.5",
+    "pytest-cov==5.0.0",
+    "ruff==0.15.12",
+    "ty==0.0.34",
+]
+
 [tool.ruff]
 line-length = 79
 target-version = "py38"

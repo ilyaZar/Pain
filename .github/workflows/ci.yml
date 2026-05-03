@@ -16,21 +16,23 @@ jobs:
         with:
           python-version: "3.8"
 
+      - uses: astral-sh/setup-uv@v5
+
       - name: Install tools
-        # ty is pinned while its diagnostics are still stabilizing.
-        run: pip install ruff ty==0.0.34 pytest pytest-cov
+        # uv.lock pins ty while its diagnostics are still stabilizing.
+        run: uv sync --locked --group dev
 
       - name: Ruff check
-        run: ruff check Pain.py tests/ tests_sublime/
+        run: uv run ruff check Pain.py tests/ tests_sublime/
 
       - name: Ruff format
-        run: ruff format --check Pain.py tests/ tests_sublime/
+        run: uv run ruff format --check Pain.py tests/ tests_sublime/
 
       - name: ty
-        run: ty check Pain.py
+        run: uv run ty check Pain.py
 
       - name: Tests with coverage
-        run: pytest tests/ -v --cov=Pain --cov-report=xml
+        run: uv run pytest tests/ -v --cov=Pain --cov-report=xml
 
       - name: Upload coverage
         if: always()
