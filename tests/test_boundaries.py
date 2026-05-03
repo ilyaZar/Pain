@@ -5,6 +5,7 @@ import pytest
 from Pain import (
     calc_point_value,
     calc_point_value_in_boundaries,
+    calc_point_value_in_range,
     is_valid_point_value,
 )
 
@@ -51,6 +52,22 @@ class TestCalcPointValueInBoundaries:
     def test_exact_min_snaps_inside(self) -> None:
         result = calc_point_value_in_boundaries(0.5, -50, 0.0, 1.0)
         assert result == pytest.approx(0.01)
+
+
+class TestCalcPointValueInRange:
+    """Inclusive separator position calculation."""
+
+    def test_no_available_range_keeps_value(self) -> None:
+        assert calc_point_value_in_range(0.5, 10, 0.8, 0.2) == 0.5
+
+    def test_positive_move_at_max_keeps_value(self) -> None:
+        assert calc_point_value_in_range(0.9, 5, 0.1, 0.9) == 0.9
+
+    def test_negative_move_at_min_keeps_value(self) -> None:
+        assert calc_point_value_in_range(0.1, -5, 0.1, 0.9) == 0.1
+
+    def test_zero_move_keeps_value(self) -> None:
+        assert calc_point_value_in_range(0.5, 0, 0.1, 0.9) == 0.5
 
 
 class TestIsValidPointValue:
