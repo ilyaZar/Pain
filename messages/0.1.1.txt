@@ -1,4 +1,4 @@
-Pain 0.1.1
+v0.1.1
 
 This update adds safer resize behavior for complex layouts.
 
@@ -9,3 +9,5 @@ This update adds safer resize behavior for complex layouts.
 
 The default `minimum_pane_size=10` keeps panes that have been shrunk still
 visible.
+
+For details, see https://github.com/ilyaZar/Pain/releases/tag/v0.1.1

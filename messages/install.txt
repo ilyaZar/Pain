@@ -1,13 +1,20 @@
-Pain
+                  Thanks for trying out Pain!
+                  ===========================
 
-Pain resizes Sublime Text panes from keyboard bindings you choose.
 
-Pain does not install default key bindings, so it will not override an
-existing setup. Add bindings from the README.
+Pain is a small pane-resizing package for Sublime Text. It lets you move
+layout separators from keyboard bindings you choose, so pane sizing can stay
+under your fingers while you work.
 
-Useful settings:
+Pain supports two resize modes. Directional mode moves separators in the
+direction of the key you press. Growth mode treats the keys as "make this pane
+bigger" or "make this pane smaller". Both modes can be adjusted from
+Preferences: Pain Settings.
 
-- `resize_mode`: directional or growth
-- `greedy_pane`: push neighboring separators when a resize reaches them
-- `resize_amount`: percent moved per keypress
-- `minimum_pane_size`: smallest allowed pane size in percent
+This package does not install default key bindings by itself. That is
+intentional: pane-resizing shortcuts are personal, and Pain should not override
+an existing setup.
+
+To add your own bindings and see the available commands, open the README at
+
+    https://github.com/ilyaZar/Pain
