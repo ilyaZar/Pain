@@ -1,0 +1,13 @@
+Pain
+
+Pain resizes Sublime Text panes from keyboard bindings you choose.
+
+Pain does not install default key bindings, so it will not override an
+existing setup. Add bindings from the README.
+
+Useful settings:
+
+- `resize_mode`: directional or growth
+- `greedy_pane`: push neighboring separators when a resize reaches them
+- `resize_amount`: percent moved per keypress
+- `minimum_pane_size`: smallest allowed pane size in percent

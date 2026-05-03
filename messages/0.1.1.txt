@@ -1,0 +1,11 @@
+Pain 0.1.1
+
+This update adds safer resize behavior for complex layouts.
+
+- greedy_pane can push neighboring separators when a resize reaches them
+- minimum_pane_size prevents panes from shrinking below a configured percent
+- greedy resizes are cancelled when the resulting layout cannot keep every
+  pane above the minimum
+
+The default `minimum_pane_size=10` keeps panes that have been shrunk still
+visible.
