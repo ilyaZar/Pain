@@ -21,6 +21,7 @@ from Pain import PainResizeCommand, WindowCommandSettings
 def _make_command(
     mode: str = "directional",
     amount: Any = None,
+    minimum: Any = None,
 ) -> PainResizeCommand:
     """Build a PainResizeCommand with a mocked window.
 
@@ -29,6 +30,8 @@ def _make_command(
             get_setting.
         amount: The resize_amount value.  ``None`` means
             the setting is absent (falls back to default).
+        minimum: The minimum_pane_size value. ``None`` means
+            the setting is absent (falls back to default).
 
     Returns:
         A command instance ready for ``resize()`` calls.
@@ -36,6 +39,8 @@ def _make_command(
     overrides = {WindowCommandSettings.RESIZE_MODE: mode}
     if amount is not None:
         overrides[WindowCommandSettings.RESIZE_AMOUNT] = amount
+    if minimum is not None:
+        overrides[WindowCommandSettings.MINIMUM_PANE_SIZE] = minimum
 
     cmd = PainResizeCommand.__new__(PainResizeCommand)
     cmd.window = MagicMock()
@@ -245,3 +250,39 @@ class TestGetResizeAmount:
     def test_over_hundred_clamps(self) -> None:
         cmd = _make_command(amount=101)
         assert cmd.get_resize_amount() == 100
+
+
+class TestGetMinimumPaneSize:
+    """Validate and clamp minimum_pane_size setting."""
+
+    def test_normal_value(self) -> None:
+        cmd = _make_command(minimum=10)
+        assert cmd.get_minimum_pane_size() == 10
+
+    def test_string_returns_default(self) -> None:
+        cmd = _make_command(minimum="small")
+        assert cmd.get_minimum_pane_size() == 10
+
+    def test_none_returns_default(self) -> None:
+        cmd = _make_command(minimum=None)
+        assert cmd.get_minimum_pane_size() == 10
+
+    def test_float_truncates(self) -> None:
+        cmd = _make_command(minimum=10.9)
+        assert cmd.get_minimum_pane_size() == 10
+
+    def test_negative_clamps_to_zero(self) -> None:
+        cmd = _make_command(minimum=-5)
+        assert cmd.get_minimum_pane_size() == 0
+
+    def test_zero_is_allowed(self) -> None:
+        cmd = _make_command(minimum=0)
+        assert cmd.get_minimum_pane_size() == 0
+
+    def test_hundred_is_maximum(self) -> None:
+        cmd = _make_command(minimum=100)
+        assert cmd.get_minimum_pane_size() == 100
+
+    def test_over_hundred_clamps(self) -> None:
+        cmd = _make_command(minimum=101)
+        assert cmd.get_minimum_pane_size() == 100

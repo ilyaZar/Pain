@@ -2,8 +2,10 @@
     // {String} "directional" moves the separator in the arrow's direction;
     // "growth" grows or shrinks the active pane
     "resize_mode": "directional",
-    // {Boolean} if true, then adjust adjacent panes during resize
+    // {Boolean} if true, push adjacent panes during resize
     "greedy_pane": false,
     // {Integer} the amount to resize pane in the range of 1 to 100
-    "resize_amount": 3
+    "resize_amount": 3,
+    // {Integer} minimum pane size as percentage of width/height
+    "minimum_pane_size": 10
 }

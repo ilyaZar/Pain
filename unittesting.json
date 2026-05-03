@@ -1,0 +1,6 @@
+{
+    "tests_dir": "tests_sublime",
+    "pattern": "test*.py",
+    "coverage": false,
+    "failfast": true
+}

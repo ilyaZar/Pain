@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import itertools
 import operator
+from copy import deepcopy
 from typing import Any
 
 import sublime
@@ -29,6 +30,9 @@ ACTIVE_GROUP = "active_group"
 CELLS = "cells"
 COLS = "cols"
 ROWS = "rows"
+
+# --- Point boundaries ---
+MINIMUM_SEPARATOR_GAP = 0.01
 
 # --- Direction opposites ---
 OPPOSITE = {UP: DOWN, RIGHT: LEFT, DOWN: UP, LEFT: RIGHT}
@@ -542,10 +546,42 @@ def calc_point_value_in_boundaries(
     """
     new_value = calc_point_value(point_value, amount)
     if new_value >= point_max:
-        new_value = point_max - 0.01
+        new_value = point_max - MINIMUM_SEPARATOR_GAP
     if new_value <= point_min:
-        new_value = point_min + 0.01
+        new_value = point_min + MINIMUM_SEPARATOR_GAP
     return new_value
+
+
+def calc_point_value_in_range(
+    point_value: float,
+    amount: float,
+    point_min: float,
+    point_max: float,
+) -> float:
+    """Calculate a new separator position within inclusive bounds.
+
+    Args:
+        point_value: Current position.
+        amount: Resize amount.
+        point_min: Minimum allowed position.
+        point_max: Maximum allowed position.
+
+    Returns:
+        Clamped new position, or ``point_value`` when no move is possible.
+    """
+    if point_min > point_max:
+        return point_value
+
+    new_value = calc_point_value(point_value, amount)
+    if amount > 0:
+        if point_value >= point_max:
+            return point_value
+        return min(max(new_value, point_min), point_max)
+    if amount < 0:
+        if point_value <= point_min:
+            return point_value
+        return max(min(new_value, point_max), point_min)
+    return point_value
 
 
 def is_valid_point_value(
@@ -566,22 +602,160 @@ def is_valid_point_value(
     return min_value < value < max_value
 
 
+def get_minimum_pane_size_limits(
+    cells: list[list[int]],
+    points: list[float],
+    point_index: int,
+    dimension: str,
+    minimum_size: float,
+) -> tuple[float, float]:
+    """Compute separator limits that preserve minimum pane size.
+
+    Args:
+        cells: All cells in the layout.
+        points: Separator positions for the dimension.
+        point_index: Index of the separator to move.
+        dimension: ``"width"`` or ``"height"``.
+        minimum_size: Minimum pane size as a 0.0--1.0 ratio.
+
+    Returns:
+        Inclusive ``(min_value, max_value)`` for the separator.
+    """
+    if minimum_size <= 0:
+        return 0.0, 1.0
+
+    point1, point2 = get_indices(dimension)
+    min_values = [
+        points[cell[point1]] + minimum_size
+        for cell in cells
+        if cell[point2] == point_index
+    ]
+    max_values = [
+        points[cell[point2]] - minimum_size
+        for cell in cells
+        if cell[point1] == point_index
+    ]
+
+    min_value = max(min_values) if min_values else 0.0
+    max_value = min(max_values) if max_values else 1.0
+    return min_value, max_value
+
+
+def get_point_value_range(
+    cells: list[list[int]],
+    points: list[float],
+    point_index: int,
+    dimension: str,
+    point_min: float,
+    point_max: float,
+    minimum_size: float,
+) -> tuple[float, float]:
+    """Compute inclusive bounds for non-greedy separator movement.
+
+    Args:
+        cells: All cells in the layout.
+        points: Separator positions for the dimension.
+        point_index: Index of the separator to move.
+        dimension: ``"width"`` or ``"height"``.
+        point_min: Existing lower boundary.
+        point_max: Existing upper boundary.
+        minimum_size: Minimum pane size as a 0.0--1.0 ratio.
+
+    Returns:
+        Inclusive ``(min_value, max_value)`` for the separator.
+    """
+    min_value = point_min + MINIMUM_SEPARATOR_GAP
+    max_value = point_max - MINIMUM_SEPARATOR_GAP
+    pane_min, pane_max = get_minimum_pane_size_limits(
+        cells,
+        points,
+        point_index,
+        dimension,
+        minimum_size,
+    )
+    return max(min_value, pane_min), min(max_value, pane_max)
+
+
+def get_greedy_point_value_range(
+    points: list[float],
+    point_index: int,
+    minimum_size: float,
+) -> tuple[float, float]:
+    """Compute inclusive bounds for greedy separator movement.
+
+    Greedy movement may push neighboring separators, so only the
+    available room to the outer edges is fixed up front.
+
+    Args:
+        points: Separator positions for the dimension.
+        point_index: Index of the separator to move.
+        minimum_size: Minimum pane size as a 0.0--1.0 ratio.
+
+    Returns:
+        Inclusive ``(min_value, max_value)`` for the separator.
+    """
+    min_gap = max(minimum_size, MINIMUM_SEPARATOR_GAP)
+    point_min = min_gap * point_index
+    point_max = 1.0 - (min_gap * (len(points) - point_index - 1))
+    return point_min, point_max
+
+
+def has_minimum_pane_sizes(
+    layout: dict[str, Any],
+    dimension: str,
+    minimum_size: float,
+) -> bool:
+    """Check whether all panes satisfy the minimum size.
+
+    Args:
+        layout: Layout dictionary to inspect.
+        dimension: ``"width"`` or ``"height"``.
+        minimum_size: Minimum pane size as a 0.0--1.0 ratio.
+
+    Returns:
+        ``True`` when every pane is large enough.
+    """
+    if minimum_size <= 0:
+        return True
+
+    point1, point2 = get_indices(dimension)
+    points = get_points(layout, dimension)
+    return all(
+        points[cell[point2]] - points[cell[point1]]
+        >= minimum_size - 0.000000001
+        for cell in layout[CELLS]
+    )
+
+
+def get_candidate_layout(
+    layout: dict[str, Any],
+    dimension: str,
+    points: list[float],
+) -> dict[str, Any]:
+    """Create a sorted candidate layout without mutating the original."""
+    candidate = deepcopy(layout)
+    return sort_layout(set_points(candidate, dimension, list(points)))
+
+
 def get_greedy_points(
     point_index: int,
     points: list[float],
     new_point_value: float,
     amount: float,
+    minimum_size: float = 0.0,
 ) -> list[float]:
     """Move a separator, pushing neighbors if needed.
 
     In greedy mode, if moving a separator would overlap a
-    neighbor, the neighbor is pushed by the same amount.
+    neighbor or violate the minimum pane size, the neighbor is
+    pushed far enough to keep room between separators.
 
     Args:
         point_index: Index of the separator to move.
         points: Current separator positions.
         new_point_value: Desired new position.
         amount: Resize amount for cascading pushes.
+        minimum_size: Minimum gap to preserve while pushing.
 
     Returns:
         Updated positions, or the original list if the
@@ -593,16 +767,24 @@ def get_greedy_points(
     if points[point_index] < new_point_value:
         step = 1
         stop = len(greedy_points)
-        compare = operator.le
+        compare = operator.le if minimum_size <= 0 else operator.lt
+        offset = minimum_size
+        clamp = max
     else:
         step = -1
         stop = -1
-        compare = operator.ge
+        compare = operator.ge if minimum_size <= 0 else operator.gt
+        offset = -minimum_size
+        clamp = min
 
     for i in range(point_index + step, stop, step):
         index = i + (step * -1)
-        if compare(greedy_points[i], greedy_points[index]):
-            new_val = calc_point_value(greedy_points[index], amount)
+        boundary = greedy_points[index] + offset
+        if compare(greedy_points[i], boundary):
+            new_val = clamp(
+                calc_point_value(greedy_points[index], amount),
+                boundary,
+            )
             if (
                 is_valid_point_value(new_val, 0, 1)
                 and new_val != greedy_points[index]
@@ -623,6 +805,7 @@ class WindowCommandSettings:
     RESIZE_MODE = "resize_mode"
     GREEDY_PANE = "greedy_pane"
     RESIZE_AMOUNT = "resize_amount"
+    MINIMUM_PANE_SIZE = "minimum_pane_size"
     SETTINGS_FILE = "Pain.sublime-settings"
     _VALID_RESIZE_MODES = ("directional", "growth")
 
@@ -712,6 +895,23 @@ class PainResizeCommand(sublime_plugin.WindowCommand, WindowCommandSettings):
             return 100
         return resize_amount
 
+    def get_minimum_pane_size(self) -> int:
+        """Read and clamp the minimum_pane_size setting.
+
+        Returns:
+            Integer in range ``[0, 100]``.
+        """
+        raw = self.get_setting(WindowCommandSettings.MINIMUM_PANE_SIZE, 10)
+        try:
+            minimum_pane_size = int(raw)
+        except (ValueError, TypeError):
+            return 10
+        if minimum_pane_size < 0:
+            return 0
+        if minimum_pane_size > 100:
+            return 100
+        return minimum_pane_size
+
     def run(
         self,
         dimension: str,
@@ -760,7 +960,7 @@ class PainResizeCommand(sublime_plugin.WindowCommand, WindowCommandSettings):
         layout, orig_layout = self.sort_and_get_layout()
         cells = orig_layout[CELLS]
         active_cell = get_active_cell(orig_layout)
-        points = get_points(layout, dimension)
+        points = list(get_points(layout, dimension))
         point, _ = get_indices(dimension)
 
         mode = self.get_setting(
@@ -794,13 +994,18 @@ class PainResizeCommand(sublime_plugin.WindowCommand, WindowCommandSettings):
             )
 
         if point_index >= 0:
+            greedy = self.get_setting(WindowCommandSettings.GREEDY_PANE)
+            minimum_size = self.get_minimum_pane_size() / 100
             amount *= sign
-            if mode == "directional":
+            if greedy:
+                point_min, point_max = get_greedy_point_value_range(
+                    points,
+                    point_index,
+                    minimum_size,
+                )
+            elif mode == "directional":
                 point_min = points[point_index - 1]
                 point_max = points[point_index + 1]
-            elif self.get_setting(WindowCommandSettings.GREEDY_PANE):
-                point_min = 0.0
-                point_max = 1.0
             else:
                 min_idx, max_idx = get_point_min_max(
                     active_cell,
@@ -812,23 +1017,45 @@ class PainResizeCommand(sublime_plugin.WindowCommand, WindowCommandSettings):
                 point_min = points[min_idx]
                 point_max = points[max_idx]
 
-            new_value = calc_point_value_in_boundaries(
+            if not greedy:
+                point_min, point_max = get_point_value_range(
+                    cells,
+                    points,
+                    point_index,
+                    dimension,
+                    point_min,
+                    point_max,
+                    minimum_size,
+                )
+
+            new_value = calc_point_value_in_range(
                 points[point_index],
                 amount,
                 point_min,
                 point_max,
             )
-            if is_valid_point_value(new_value, point_min, point_max):
-                if self.get_setting(WindowCommandSettings.GREEDY_PANE):
+            if new_value != points[point_index]:
+                if greedy:
                     points = get_greedy_points(
                         point_index,
                         points,
                         new_value,
                         amount,
+                        minimum_size,
                     )
                 else:
                     points[point_index] = new_value
-                layout = sort_layout(set_points(layout, dimension, points))
+                candidate_layout = get_candidate_layout(
+                    layout,
+                    dimension,
+                    points,
+                )
+                if has_minimum_pane_sizes(
+                    candidate_layout,
+                    dimension,
+                    minimum_size,
+                ):
+                    layout = candidate_layout
 
         self.swap_views(cells, layout[CELLS])
         self.set_layout(layout)
