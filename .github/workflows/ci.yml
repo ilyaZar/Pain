@@ -17,7 +17,8 @@ jobs:
           python-version: "3.8"
 
       - name: Install tools
-        run: pip install ruff pyright pytest pytest-cov
+        # ty is pinned while its diagnostics are still stabilizing.
+        run: pip install ruff ty==0.0.34 pytest pytest-cov
 
       - name: Ruff check
         run: ruff check Pain.py tests/ tests_sublime/
@@ -25,8 +26,8 @@ jobs:
       - name: Ruff format
         run: ruff format --check Pain.py tests/ tests_sublime/
 
-      - name: Pyright
-        run: pyright Pain.py
+      - name: ty
+        run: ty check Pain.py
 
       - name: Tests with coverage
         run: pytest tests/ -v --cov=Pain --cov-report=xml

@@ -28,10 +28,11 @@ convention = "google"
 "tests/*" = ["D"]  # no docstrings required in tests
 "tests_sublime/*" = ["D"]  # no docstrings required in tests
 
-[tool.pyright]
-pythonVersion = "3.8"
-typeCheckingMode = "basic"
-reportMissingImports = false
+[tool.ty.environment]
+python-version = "3.8"
+
+[tool.ty.analysis]
+allowed-unresolved-imports = ["sublime", "sublime_plugin"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
